@@ -128,18 +128,38 @@ export const Settings = () => {
             </div>
           )}
 
-          <button
-            onClick={handleConnectGCal}
-            className={cn(
-              "px-8 py-3 rounded-xl font-bold shadow-sm transition-all flex items-center gap-3",
-              isGCalConnected
-                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                : "bg-accent-blue text-white hover:bg-accent-hover shadow-lg shadow-accent-blue/20"
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleConnectGCal}
+              className={cn(
+                "px-8 py-3 rounded-xl font-bold shadow-sm transition-all flex items-center gap-3",
+                isGCalConnected
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "bg-accent-blue text-white hover:bg-accent-hover shadow-lg shadow-accent-blue/20"
+              )}
+            >
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 bg-white rounded-full p-0.5" />
+              {isGCalConnected ? 'Conectado como drgio@440clinic.com' : 'Conectar con Google Calendar'}
+            </button>
+
+            {isGCalConnected && (
+              <button
+                onClick={handleClearGCal}
+                className="px-4 py-3 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-xs font-bold hover:bg-red-500/20 transition-all"
+              >
+                Desconectar
+              </button>
             )}
-          >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 bg-white rounded-full p-0.5" />
-            {isGCalConnected ? 'Conectado como drgio@440clinic.com' : 'Conectar con Google Calendar'}
-          </button>
+
+            {!isGCalConnected && localStorage.getItem('GOOGLE_CLIENT_ID') && (
+              <button
+                onClick={handleClearGCal}
+                className="px-4 py-3 bg-navy-card border border-border-subtle text-text-secondary rounded-xl text-xs font-bold hover:text-text-primary transition-all"
+              >
+                Limpiar Datos
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
