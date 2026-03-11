@@ -1,0 +1,5 @@
+{
+  "name": "Agenda Clínica 440",
+  "description": "Sistema interno de gestión de agenda clínica para 440 Clinic by Dr. Gio. Gestión de pacientes, citas, profesionales y recursos con integración de Google Calendar.",
+  "requestFramePermissions": ["calendar"]
+}
