@@ -47,9 +47,9 @@ export const Settings = () => {
 
     localStorage.setItem('GOOGLE_CLIENT_ID', gcalClientId);
 
-    // REDIRECT URI MUST MATCH GOOGLE CONSOLE
-    // We use the origin exactly as configured
-    const redirectUri = window.location.origin + '/';
+    // REDIRECT URI MUST MATCH GOOGLE CONSOLE EXACTLY
+    // Your screenshot shows: https://agenda-clinica-440-1.vercel.app
+    const redirectUri = window.location.origin;
     const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${gcalClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&state=settings`;
