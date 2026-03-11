@@ -47,9 +47,9 @@ export const Settings = () => {
 
     localStorage.setItem('GOOGLE_CLIENT_ID', gcalClientId);
 
-    // WE FORCE THE EXACT STRING FROM YOUR GOOGLE CONSOLE
-    // Matches: https://agenda-pro-440.vercel.app
-    const redirectUri = 'https://agenda-pro-440.vercel.app';
+    // WE USE THE CURRENT DOMAIN AUTOMATICALLY
+    // Make sure this EXACT domain is in your Google Console
+    const redirectUri = window.location.origin.replace(/\/$/, '');
     const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${gcalClientId.trim()}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&state=settings`;
