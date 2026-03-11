@@ -181,6 +181,9 @@ ALTER TABLE faq_knowledge ENABLE ROW LEVEL SECURITY;
 -- Profiles
 CREATE POLICY "Staff can read all profiles" ON profiles FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
+CREATE POLICY "Admin can update all profiles" ON profiles FOR UPDATE TO authenticated USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
 
 -- Patients
 CREATE POLICY "Staff can read patients" ON patients FOR SELECT TO authenticated USING (true);

@@ -87,12 +87,16 @@ export default function App() {
     }
   };
 
-  const handleLogin = async () => {
-    // In a real app, this would be a real login form or OAuth
-    // For now, we'll simulate success if the user clicks the button
-    // (In Supabase, you'd typically use supabase.auth.signInWithPassword)
-    setIsAuthenticated(true);
-    setUser({ id: 'admin-123', name: 'Administrador 440', role: 'admin' });
+  const handleLogin = async (email: string, pass: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pass,
+    });
+
+    if (error) throw error;
+    if (data.user) {
+      await fetchProfile(data.user.id);
+    }
   };
 
   const handleLogout = async () => {

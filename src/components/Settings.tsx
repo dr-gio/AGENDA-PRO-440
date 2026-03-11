@@ -14,28 +14,52 @@ import {
   Key,
   ExternalLink,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Users,
+  UserPlus
 } from 'lucide-react';
 import { dbService } from '../services/dbService';
+import { supabase } from '../lib/supabase';
 
 export const Settings = () => {
   const [faqs, setFaqs] = React.useState<any[]>([]);
+  const [profiles, setProfiles] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [apiKey, setApiKey] = React.useState(localStorage.getItem('GEMINI_API_KEY') || '');
   const [showKey, setShowKey] = React.useState(false);
 
   React.useEffect(() => {
-    fetchFAQs();
+    fetchData();
   }, []);
 
-  const fetchFAQs = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const data = await dbService.getFAQs();
-      setFaqs(data);
+      const [faqData, profileResp] = await Promise.all([
+        dbService.getFAQs(),
+        supabase.from('profiles').select('*').order('created_at', { ascending: false })
+      ]);
+      setFaqs(faqData);
+      if (profileResp.data) setProfiles(profileResp.data);
     } catch (error) {
-      console.error('Error fetching FAQs:', error);
+      console.error('Error fetching settings data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleUserRole = async (userId: string, currentRole: string) => {
+    const newRole = currentRole === 'admin' ? 'reception' : 'admin';
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+      setProfiles(profiles.map(p => p.id === userId ? { ...p, role: newRole } : p));
+    } catch (error: any) {
+      alert('Error actualizando rol: ' + error.message);
     }
   };
 
@@ -157,6 +181,78 @@ export const Settings = () => {
               Esta llave permite al Agente IA recibir y procesar solicitudes clínicas. Manténgala segura.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* User Management Section */}
+      <section className="bg-navy-card p-10 rounded-[40px] border border-border-subtle shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-accent-blue/5 blur-[100px] rounded-full -mr-40 -mt-40 group-hover:bg-accent-blue/10 transition-all duration-700" />
+
+        <div className="flex items-center justify-between mb-10 relative z-10">
+          <div className="flex items-center gap-6">
+            <div className="p-4 bg-accent-blue text-white rounded-[24px] shadow-2xl shadow-accent-blue/20">
+              <Users size={32} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-text-primary tracking-tight">Gestión de Usuarios</h3>
+              <p className="text-sm text-text-secondary font-medium mt-1">Administra los accesos y roles de tu equipo clínico.</p>
+            </div>
+          </div>
+          <a
+            href="https://supabase.com/dashboard/project/wvkiqgcpccjcmafjhwzu/auth/users"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-6 py-3 bg-navy-deep border border-border-subtle text-text-primary rounded-2xl text-sm font-bold hover:bg-white/5 transition-all shadow-sm"
+          >
+            <UserPlus size={18} />
+            Invitar desde Supabase
+          </a>
+        </div>
+
+        <div className="space-y-4 relative z-10">
+          {profiles.map((profile) => (
+            <div key={profile.id} className="flex items-center justify-between p-6 bg-navy-deep/40 backdrop-blur-sm rounded-3xl border border-border-subtle hover:border-accent-blue/30 transition-all group/item shadow-inner">
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-accent-blue/10 border border-accent-blue/20 rounded-2xl flex items-center justify-center text-accent-blue font-black text-xl shadow-lg">
+                  {profile.name?.[0]?.toUpperCase() || profile.email?.[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <p className="font-bold text-text-primary text-lg">{profile.name}</p>
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${profile.role === 'admin' ? 'bg-accent-blue text-white' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      }`}>
+                      {profile.role === 'admin' ? 'Administrador' : 'Colaborador'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary/60 font-medium mt-0.5">{profile.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => toggleUserRole(profile.id, profile.role)}
+                  className="px-6 py-3 bg-navy-card border border-border-subtle rounded-2xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-text-primary hover:border-accent-blue/50 transition-all shadow-lg"
+                >
+                  Cambiar a {profile.role === 'admin' ? 'Colaborador' : 'Administrador'}
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {profiles.length === 0 && (
+            <div className="p-16 text-center bg-navy-deep/20 rounded-[40px] border border-dashed border-border-subtle border-2">
+              <Users size={48} className="mx-auto mb-6 text-text-secondary/10" />
+              <p className="text-lg font-bold text-text-secondary/40">No hay perfiles registrados en la base de datos.</p>
+              <p className="text-sm text-text-secondary/20 mt-2 italic">Solo los usuarios registrados vía Supabase Auth aparecerán aquí.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 p-6 bg-accent-blue/5 rounded-3xl border border-accent-blue/10 flex items-start gap-4">
+          <Info size={20} className="text-accent-blue mt-1 shrink-0" />
+          <p className="text-xs text-text-secondary leading-relaxed font-medium">
+            <strong>Instrucciones de Seguridad:</strong> Los usuarios deben crearse primero en el <strong>Dashboard de Supabase</strong> con su correo y contraseña. Una vez que inicien sesión por primera vez, aparecerán en esta lista para que el administrador les asigne el rol correspondiente. Los <strong>Colaboradores</strong> solo tienen acceso al Agente IA y al Calendario.
+          </p>
         </div>
       </section>
 
