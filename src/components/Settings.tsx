@@ -48,14 +48,21 @@ export const Settings = () => {
     localStorage.setItem('GOOGLE_CLIENT_ID', gcalClientId);
 
     // REDIRECT URI MUST MATCH GOOGLE CONSOLE EXACTLY
-    // Your screenshot shows: https://agenda-clinica-440-1.vercel.app
-    const redirectUri = window.location.origin;
+    // We force the origin without trailing slash to match URI 1 in user's screenshot
+    const redirectUri = window.location.origin.replace(/\/$/, '');
     const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${gcalClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&state=settings`;
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${gcalClientId.trim()}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&state=settings`;
 
     console.log('[GCal] Redirecting via window.location.href');
     window.location.href = authUrl;
+  };
+
+  const handleClearGCal = () => {
+    localStorage.removeItem('GOOGLE_OAUTH_TOKEN');
+    localStorage.removeItem('GOOGLE_CLIENT_ID');
+    setIsGCalConnected(false);
+    window.location.reload();
   };
 
   const fetchData = async () => {
