@@ -117,7 +117,9 @@ export async function createGoogleCalendarEvent(
   oauthToken?: string,
   patientEmail?: string
 ): Promise<SyncResult> {
-  if (!oauthToken) {
+  const token = oauthToken || localStorage.getItem('GOOGLE_OAUTH_TOKEN');
+
+  if (!token) {
     console.warn('[GCal] No OAuth token — event will sync when credentials are configured.');
     return {
       success: false,
@@ -139,7 +141,7 @@ export async function createGoogleCalendarEvent(
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${oauthToken}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -176,7 +178,9 @@ export async function updateGoogleCalendarEvent(
   oauthToken?: string,
   patientEmail?: string
 ): Promise<SyncResult> {
-  if (!oauthToken) {
+  const token = oauthToken || localStorage.getItem('GOOGLE_OAUTH_TOKEN');
+
+  if (!token) {
     console.warn('[GCal] No OAuth token — update queued.');
     return { success: false, sync_status: 'pending', error: 'OAuth not configured.' };
   }
@@ -192,7 +196,7 @@ export async function updateGoogleCalendarEvent(
       {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${oauthToken}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -228,7 +232,9 @@ export async function cancelGoogleCalendarEvent(
   calendarId: string = CLINIC_CALENDAR_ID,
   oauthToken?: string
 ): Promise<SyncResult> {
-  if (!oauthToken) {
+  const token = oauthToken || localStorage.getItem('GOOGLE_OAUTH_TOKEN');
+
+  if (!token) {
     console.warn('[GCal] No OAuth token — cancellation queued.');
     return { success: false, sync_status: 'pending', error: 'OAuth not configured.' };
   }
@@ -238,7 +244,7 @@ export async function cancelGoogleCalendarEvent(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${googleEventId}`,
       {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${oauthToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       }
     );
 

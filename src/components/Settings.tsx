@@ -16,10 +16,12 @@ import {
   Info,
   CheckCircle2,
   Users,
-  UserPlus
+  UserPlus,
+  Check
 } from 'lucide-react';
 import { dbService } from '../services/dbService';
 import { supabase } from '../lib/supabase';
+import { cn } from '../lib/utils';
 
 export const Settings = () => {
   const [faqs, setFaqs] = React.useState<any[]>([]);
@@ -27,10 +29,34 @@ export const Settings = () => {
   const [loading, setLoading] = React.useState(true);
   const [apiKey, setApiKey] = React.useState(localStorage.getItem('GEMINI_API_KEY') || '');
   const [showKey, setShowKey] = React.useState(false);
+  const [gcalClientId, setGcalClientId] = React.useState(localStorage.getItem('GOOGLE_CLIENT_ID') || '453539739290-bvqu4bjanlgnpmffaojees3eut0qrih4.apps.googleusercontent.com');
+  const [isGCalConnected, setIsGCalConnected] = React.useState(false);
 
   React.useEffect(() => {
     fetchData();
+    if (localStorage.getItem('GOOGLE_OAUTH_TOKEN')) {
+      setIsGCalConnected(true);
+    }
   }, []);
+
+  const handleConnectGCal = () => {
+    if (!gcalClientId) {
+      alert('Por favor, ingresa tu Google Client ID primero.');
+      return;
+    }
+
+    localStorage.setItem('GOOGLE_CLIENT_ID', gcalClientId);
+
+    // REDIRECT URI MUST MATCH GOOGLE CONSOLE
+    // We use the origin exactly as configured
+    const redirectUri = window.location.origin + '/';
+    const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${gcalClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&state=settings`;
+
+    console.log('[GCal] Redirecting via window.location.href');
+    window.location.href = authUrl;
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -83,10 +109,36 @@ export const Settings = () => {
         </div>
 
         <div className="p-6 bg-navy-deep/50 rounded-2xl border border-dashed border-border-subtle flex flex-col items-center justify-center text-center">
-          <p className="text-text-secondary mb-4 font-medium">Conecta la cuenta principal de la clínica para gestionar los calendarios.</p>
-          <button className="px-8 py-3 bg-navy-card border border-border-subtle rounded-xl text-text-primary font-bold shadow-sm hover:bg-white/5 transition-all flex items-center gap-3">
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-            Conectar drgio@440clinic.com
+          <p className="text-text-secondary mb-4 font-medium text-sm">
+            {isGCalConnected
+              ? 'Cuenta conectada correctamente. Las citas se sincronizarán automáticamente.'
+              : 'Escribe tu Google Client ID abajo y luego haz clic en Conectar.'}
+          </p>
+
+          {!isGCalConnected && (
+            <div className="w-full max-w-md mb-6 space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary float-left ml-2">Google Client ID</label>
+              <input
+                type="text"
+                value={gcalClientId}
+                onChange={(e) => setGcalClientId(e.target.value)}
+                placeholder="920831...-....apps.googleusercontent.com"
+                className="w-full bg-navy-card border border-border-subtle rounded-xl px-4 py-3 text-text-primary text-xs focus:border-accent-blue transition-colors"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={handleConnectGCal}
+            className={cn(
+              "px-8 py-3 rounded-xl font-bold shadow-sm transition-all flex items-center gap-3",
+              isGCalConnected
+                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                : "bg-accent-blue text-white hover:bg-accent-hover shadow-lg shadow-accent-blue/20"
+            )}
+          >
+            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 bg-white rounded-full p-0.5" />
+            {isGCalConnected ? 'Conectado como drgio@440clinic.com' : 'Conectar con Google Calendar'}
           </button>
         </div>
       </section>

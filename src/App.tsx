@@ -24,6 +24,25 @@ export default function App() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    // 1. Detect GCal OAuth Callback
+    const hash = window.location.hash.substring(1);
+    if (hash.includes('access_token=')) {
+      const params = new URLSearchParams(hash);
+      const token = params.get('access_token');
+      if (token) {
+        localStorage.setItem('GOOGLE_OAUTH_TOKEN', token);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setActiveTab('settings');
+
+        // Show success notification
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-2xl z-[9999] animate-bounce font-bold flex items-center gap-2';
+        toast.innerHTML = '<span>✅</span> Google Calendar conectado';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+      }
+    }
+
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
