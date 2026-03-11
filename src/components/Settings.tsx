@@ -1,22 +1,28 @@
 import React from 'react';
-import { 
-  Save, 
-  Calendar, 
-  Bell, 
-  Shield, 
-  MapPin, 
+import {
+  Save,
+  Calendar,
+  Bell,
+  Shield,
+  MapPin,
   Clock,
   Plus,
   Trash2,
   Settings as SettingsIcon,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Key,
+  ExternalLink,
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 import { dbService } from '../services/dbService';
 
 export const Settings = () => {
   const [faqs, setFaqs] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [apiKey, setApiKey] = React.useState(localStorage.getItem('GEMINI_API_KEY') || '');
+  const [showKey, setShowKey] = React.useState(false);
 
   React.useEffect(() => {
     fetchFAQs();
@@ -33,6 +39,11 @@ export const Settings = () => {
     }
   };
 
+  const handleSaveApiKey = () => {
+    localStorage.setItem('GEMINI_API_KEY', apiKey);
+    alert('Configuración de IA guardada con éxito.');
+  };
+
   return (
     <div className="max-w-4xl space-y-8 pb-20">
       {/* Google Calendar Integration */}
@@ -46,7 +57,7 @@ export const Settings = () => {
             <p className="text-sm text-text-secondary">Sincroniza las citas con los calendarios de los profesionales.</p>
           </div>
         </div>
-        
+
         <div className="p-6 bg-navy-deep/50 rounded-2xl border border-dashed border-border-subtle flex flex-col items-center justify-center text-center">
           <p className="text-text-secondary mb-4 font-medium">Conecta la cuenta principal de la clínica para gestionar los calendarios.</p>
           <button className="px-8 py-3 bg-navy-card border border-border-subtle rounded-xl text-text-primary font-bold shadow-sm hover:bg-white/5 transition-all flex items-center gap-3">
@@ -102,6 +113,53 @@ export const Settings = () => {
         </div>
       </section>
 
+      {/* AI Configuration */}
+      <section className="bg-navy-card p-8 rounded-3xl border border-border-subtle shadow-lg">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="p-3 bg-accent-blue text-white rounded-2xl shadow-lg shadow-accent-blue/20">
+            <Key size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-text-primary tracking-tight">Configuración de Inteligencia Artificial</h3>
+            <p className="text-sm text-text-secondary">Gestiona la conexión con Google Gemini para el Agente IA.</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="p-6 bg-navy-deep/50 rounded-2xl border border-border-subtle">
+            <label className="block text-sm font-bold text-text-primary mb-2">Google Gemini API Key</label>
+            <div className="flex gap-4">
+              <div className="relative flex-1">
+                <input
+                  type={showKey ? "text" : "password"}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full bg-navy-card border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent-blue transition-colors pr-12"
+                />
+                <button
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
+                >
+                  {showKey ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+              <button
+                onClick={handleSaveApiKey}
+                className="px-6 py-3 bg-accent-blue text-white rounded-xl font-bold hover:bg-accent-hover transition-all flex items-center gap-2"
+              >
+                <Save size={18} />
+                Guardar llave
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-text-secondary flex items-center gap-2 italic">
+              <Info size={12} />
+              Esta llave permite al Agente IA recibir y procesar solicitudes clínicas. Manténgala segura.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Appointment Types */}
       <section className="bg-navy-card p-8 rounded-3xl border border-border-subtle shadow-lg">
         <div className="flex items-center justify-between mb-8">
@@ -145,6 +203,54 @@ export const Settings = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Google Calendar Help Guide */}
+      <section className="bg-navy-card p-8 rounded-3xl border border-border-subtle shadow-lg overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-accent-blue/5 blur-3xl rounded-full -mr-32 -mt-32" />
+
+        <div className="flex items-center gap-4 mb-8">
+          <div className="p-3 bg-accent-blue text-white rounded-2xl shadow-lg shadow-accent-blue/20">
+            <HelpCircle size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-text-primary tracking-tight">Guía de Calendarios</h3>
+            <p className="text-sm text-text-secondary">Cómo vincular correctamente Google Calendar.</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <h4 className="font-bold text-text-primary flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-accent-blue" />
+              Para Profesionales
+            </h4>
+            <ol className="text-sm text-text-secondary space-y-3 pl-4">
+              <li>1. Ve a la sección <strong>Profesionales</strong>.</li>
+              <li>2. Haz clic en Editar (o crear nuevo).</li>
+              <li>3. En el campo <strong>Google Calendar ID</strong>, pega el correo del profesional (ej: sharon@440clinic.com) o el ID del calendario secundario.</li>
+              <li>4. El Agente IA ahora podrá leer su disponibilidad.</li>
+            </ol>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-bold text-text-primary flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-accent-blue" />
+              Para Recursos (Salas/Cámaras)
+            </h4>
+            <ol className="text-sm text-text-secondary space-y-3 pl-4">
+              <li>1. Ve a la sección <strong>Recursos</strong>.</li>
+              <li>2. En el campo <strong>Calendar ID</strong>, usa el ID del recurso de Google Workspace (ej: resource_id@resource.calendar.google.com).</li>
+              <li>3. La app bloqueará automáticamente este recurso en Google cuando se agende una cita que lo requiera.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div className="mt-8 p-4 bg-accent-blue/5 rounded-xl border border-accent-blue/10">
+          <p className="text-xs text-text-secondary leading-relaxed">
+            <strong>Nota Técnica:</strong> Todas las sincronizaciones ocurren inicialmente a través de la cuenta <code>drgio@440clinic.com</code>. Asegúrese de que esta cuenta tenga permisos de "Hacer cambios y administrar el uso compartido" en los calendarios individuales de los profesionales.
+          </p>
         </div>
       </section>
 

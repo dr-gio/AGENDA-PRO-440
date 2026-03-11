@@ -204,10 +204,12 @@ function computeEndTime(startTime: string, durationMinutes = 60): string {
 
 export const agentService = {
   async processMessage(message: string, userId: string): Promise<string> {
-    // Guard: require Gemini API key
-    const apiKey = typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined;
+    // Guard: require Gemini API key (check localStorage override first, then Vite/Node env)
+    const apiKey = localStorage.getItem('GEMINI_API_KEY') ||
+      (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : (import.meta as any).env?.VITE_GEMINI_API_KEY);
+
     if (!apiKey) {
-      return 'El Agente IA no está disponible: falta la configuración de GEMINI_API_KEY en el entorno.';
+      return 'El Agente IA no está disponible: falta la configuración de GEMINI_API_KEY. Configure la llave en Ajustes o en el entorno.';
     }
 
     const ai = new GoogleGenAI({ apiKey });
