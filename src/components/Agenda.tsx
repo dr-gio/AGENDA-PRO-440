@@ -56,7 +56,7 @@ export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userI
 
       // 2. Fetch active professionals with a calendar ID
       const profs = await dbService.getCollection('professionals', { status: 'active' });
-      const profsWithCalendar = profs.filter((p: any) => p.calendar_id);
+      const profsWithCalendar = profs.filter((p: any) => p.google_calendar_id);
 
       // 3. Define time range for the current week view
       const timeMin = weekDays[0].toISOString();
@@ -64,7 +64,7 @@ export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userI
 
       // 4. Fetch GCal events for each professional (only if token is present)
       const remoteEventsPromises = profsWithCalendar.map(async (p: any) => {
-        const events = await listGoogleCalendarEvents(p.calendar_id, timeMin, timeMax);
+        const events = await listGoogleCalendarEvents(p.google_calendar_id, timeMin, timeMax);
         return events.map(e => ({
           id: `gcal-${e.id}`,
           appointment_date: (e.start.dateTime || e.start.date).split('T')[0],

@@ -32,13 +32,13 @@ const ProfessionalModal = ({
     specialty: '',
     email: '',
     type: 'interno',
-    calendar_id: '',
+    google_calendar_id: '',
     status: 'active'
   });
 
   React.useEffect(() => {
     if (initialData) setFormData(initialData);
-    else setFormData({ name: '', specialty: '', email: '', type: 'interno', calendar_id: '', status: 'active' });
+    else setFormData({ name: '', specialty: '', email: '', type: 'interno', google_calendar_id: '', status: 'active' });
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -110,8 +110,8 @@ const ProfessionalModal = ({
             </div>
             <p className="text-[10px] text-text-secondary leading-relaxed">Pega el correo de Google o el ID del calendario secundario para leer su disponibilidad.</p>
             <input
-              value={formData.calendar_id}
-              onChange={(e) => setFormData({ ...formData, calendar_id: e.target.value })}
+              value={formData.google_calendar_id}
+              onChange={(e) => setFormData({ ...formData, google_calendar_id: e.target.value })}
               className="w-full p-3 bg-navy-deep border border-border-subtle rounded-lg text-xs text-text-primary focus:border-accent-blue outline-none"
               placeholder="ej: nombre@gmail.com"
             />
@@ -224,12 +224,12 @@ export const Professionals = () => {
                   <span className="truncate">{pro.email}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-text-secondary">
-                  <Calendar size={16} className={pro.calendar_id ? "text-emerald-500" : "text-text-secondary/40"} />
+                  <Calendar size={16} className={pro.google_calendar_id ? "text-emerald-500" : "text-text-secondary/40"} />
                   <span className={cn(
                     "text-[10px] font-bold uppercase tracking-widest",
-                    pro.calendar_id ? "text-emerald-500" : "text-text-secondary/50"
+                    pro.google_calendar_id ? "text-emerald-500" : "text-text-secondary/50"
                   )}>
-                    {pro.calendar_id ? "Sincronizado" : "Sin Sincronizar"}
+                    {pro.google_calendar_id ? "Sincronizado" : "Sin Sincronizar"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-bold text-text-secondary/50">
