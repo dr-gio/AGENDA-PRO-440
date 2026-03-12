@@ -28,13 +28,13 @@ const ResourceModal = ({
   const [formData, setFormData] = React.useState({
     name: '',
     type: '',
-    google_calendar_id: '',
+    calendar_id: '',
     status: 'active'
   });
 
   React.useEffect(() => {
     if (initialData) setFormData(initialData);
-    else setFormData({ name: '', type: '', google_calendar_id: '', status: 'active' });
+    else setFormData({ name: '', type: '', calendar_id: '', status: 'active' });
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -81,8 +81,8 @@ const ResourceModal = ({
             </div>
             <p className="text-[10px] text-text-secondary leading-relaxed font-medium">Usa el ID del calendario de recurso de Google (ej: resource_id@resource.calendar.google.com)</p>
             <input
-              value={formData.google_calendar_id}
-              onChange={(e) => setFormData({ ...formData, google_calendar_id: e.target.value })}
+              value={formData.calendar_id}
+              onChange={(e) => setFormData({ ...formData, calendar_id: e.target.value })}
               className="w-full p-3 bg-navy-deep border border-border-subtle rounded-lg text-xs text-text-primary focus:border-accent-blue outline-none"
               placeholder="ej: resource@resource.calendar.google.com"
             />
@@ -184,13 +184,13 @@ export const Resources = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-text-secondary/50">
                   <span>Conexión Google</span>
-                  <span className={res.google_calendar_id ? "text-emerald-500" : ""}>
-                    {res.google_calendar_id ? "Sincronizado" : "No vinculada"}
+                  <span className={res.calendar_id ? "text-emerald-500" : ""}>
+                    {res.calendar_id ? "Sincronizado" : "No vinculada"}
                   </span>
                 </div>
                 <div className="h-1 bg-navy-deep rounded-full overflow-hidden">
                   <div
-                    className={cn("h-full transition-all duration-1000", res.google_calendar_id ? "bg-emerald-500 w-full" : "bg-accent-blue w-0")}
+                    className={cn("h-full transition-all duration-1000", res.calendar_id ? "bg-emerald-500 w-full" : "bg-accent-blue w-0")}
                   />
                 </div>
               </div>

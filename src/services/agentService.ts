@@ -269,13 +269,13 @@ export const agentService = {
 
               // Also check GCal if configured
               const professional = await dbService.getDocument('professionals', profId);
-              if (professional.google_calendar_id) {
+              if (professional.calendar_id) {
                 const timeMin = `${date}T${time}:00Z`;
                 const endDateTime = new Date(`${date}T${time}:00Z`);
                 endDateTime.setHours(endDateTime.getHours() + 1);
                 const timeMax = endDateTime.toISOString();
 
-                const gcalEvents = await listGoogleCalendarEvents(professional.google_calendar_id, timeMin, timeMax);
+                const gcalEvents = await listGoogleCalendarEvents(professional.calendar_id, timeMin, timeMax);
                 if (gcalEvents.length > 0) {
                   functionResult = false;
                   break;

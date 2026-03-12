@@ -188,7 +188,7 @@ export const TVMonitor = () => {
                     .filter(a => a.professional_id === p.id)
                     .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-                const gcalAppts = await getGCalEvents(p.google_calendar_id);
+                const gcalAppts = await getGCalEvents(p.calendar_id);
 
                 const allAppts = [...localAppts, ...gcalAppts].sort((a, b) => a.start_time.localeCompare(b.start_time));
 
@@ -209,7 +209,7 @@ export const TVMonitor = () => {
                     .filter(a => a.resource_id === r.id)
                     .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-                const gcalAppts = await getGCalEvents(r.google_calendar_id);
+                const gcalAppts = await getGCalEvents(r.calendar_id);
 
                 const allAppts = [...localAppts, ...gcalAppts].sort((a, b) => a.start_time.localeCompare(b.start_time));
 
