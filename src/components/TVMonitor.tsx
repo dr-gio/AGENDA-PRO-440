@@ -199,7 +199,7 @@ export const TVMonitor = () => {
                     name: r.name,
                     type: 'Sala / Recurso',
                     category: 'resource',
-                    icon: iconMap[r.name.split(' ')[0]] || Box,
+                    icon: iconMap[(r.name || '').split(' ')[0]] || Box,
                     current: rAppts.find(a => a.start_time <= currentTimeStr && a.end_time >= currentTimeStr && a.status !== 'cancelled'),
                     upcoming: rAppts.filter(a => a.start_time > currentTimeStr && a.status !== 'cancelled')
                 };

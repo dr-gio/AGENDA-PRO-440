@@ -193,7 +193,7 @@ REGLAS CRÍTICAS:
 // ─── Helper: compute endTime if not provided ─────────────────────────────────
 
 function computeEndTime(startTime: string, durationMinutes = 60): string {
-  const [hStr, mStr] = startTime.split(':');
+  const [hStr, mStr] = (startTime || '08:00').split(':');
   const totalMinutes = parseInt(hStr) * 60 + parseInt(mStr) + durationMinutes;
   const h = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
   const m = (totalMinutes % 60).toString().padStart(2, '0');

@@ -66,7 +66,8 @@ export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userI
       const startTime = data.time;
 
       // Compute default endTime (+1 hour)
-      const [h, m] = startTime.split(':').map(Number);
+      const startTimeStr = startTime || '08:00';
+      const [h, m] = startTimeStr.split(':').map(Number);
       const endH = (h + 1).toString().padStart(2, '0');
       const endTime = data.end_time || `${endH}:${m.toString().padStart(2, '0')}`;
 
@@ -243,8 +244,10 @@ export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userI
                 {appointments
                   .filter(app => isSameDay(parseISO(app.appointment_date), day))
                   .map((app, i) => {
-                    const startHour = parseInt(app.start_time.split(':')[0]);
-                    const startMin = parseInt(app.start_time.split(':')[1]);
+                    const timeStr = app.start_time || '08:00';
+                    const [hPart, mPart] = timeStr.split(':');
+                    const startHour = parseInt(hPart);
+                    const startMin = parseInt(mPart);
                     const top = (startHour - 7) * 80 + (startMin / 60) * 80;
 
                     return (
