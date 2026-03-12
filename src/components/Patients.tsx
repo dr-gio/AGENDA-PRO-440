@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  Search, 
-  Plus, 
-  MoreVertical, 
-  User, 
-  Phone, 
-  Mail, 
+import {
+  Search,
+  Plus,
+  MoreVertical,
+  User,
+  Phone,
+  Mail,
   MapPin,
   Filter,
   Download,
@@ -21,6 +21,14 @@ export const Patients = () => {
   const [patients, setPatients] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    full_name: '',
+    document_type: 'CC',
+    document_number: '',
+    phone: '',
+    email: '',
+    city: ''
+  });
 
   React.useEffect(() => {
     fetchPatients();
@@ -38,7 +46,29 @@ export const Patients = () => {
     }
   };
 
-  const filteredPatients = patients.filter(p => 
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      await dbService.addDocument('patients', formData);
+      setIsModalOpen(false);
+      setFormData({
+        full_name: '',
+        document_type: 'CC',
+        document_number: '',
+        phone: '',
+        email: '',
+        city: ''
+      });
+      fetchPatients();
+    } catch (error) {
+      console.error('Error saving patient:', error);
+      alert('Error al guardar el paciente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPatients = patients.filter(p =>
     p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.document_number.includes(searchTerm) ||
     p.phone.includes(searchTerm)
@@ -57,7 +87,7 @@ export const Patients = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="flex items-center gap-3 w-full md:w-auto">
           <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-navy-card border border-border-subtle rounded-xl text-text-primary font-bold hover:bg-white/5 transition-all">
             <Filter size={18} />
@@ -67,7 +97,7 @@ export const Patients = () => {
             <Download size={18} />
             Exportar
           </button>
-          <button 
+          <button
             onClick={() => setIsModalOpen(true)}
             className="flex-[2] md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-accent-blue text-white rounded-xl font-bold hover:bg-accent-hover shadow-lg shadow-accent-blue/20 transition-all"
           >
@@ -83,7 +113,7 @@ export const Patients = () => {
             <Loader2 className="animate-spin text-accent-blue" size={32} />
           </div>
         )}
-        
+
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-border-subtle bg-navy-deep/50">
@@ -158,7 +188,7 @@ export const Patients = () => {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-main/80 backdrop-blur-md">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -170,35 +200,68 @@ export const Patients = () => {
                   <X size={20} className="text-text-secondary" />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Nombre Completo</label>
-                  <input type="text" className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20" placeholder="Ej: María García" />
+                  <input
+                    type="text"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                    className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                    placeholder="Ej: María García"
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Tipo Doc.</label>
-                    <select className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20">
-                      <option>CC</option>
-                      <option>CE</option>
-                      <option>TI</option>
+                    <select
+                      value={formData.document_type}
+                      onChange={(e) => setFormData({ ...formData, document_type: e.target.value })}
+                      className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                    >
+                      <option value="CC">CC</option>
+                      <option value="CE">CE</option>
+                      <option value="TI">TI</option>
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Número</label>
-                    <input type="text" className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20" />
+                    <input
+                      type="text"
+                      value={formData.document_number}
+                      onChange={(e) => setFormData({ ...formData, document_number: e.target.value })}
+                      className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Teléfono</label>
-                  <input type="text" className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20" />
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full p-4 bg-navy-deep border border-border-subtle rounded-2xl text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                    placeholder="ejemplo@correo.com"
+                  />
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-4 mt-8">
                 <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-text-secondary font-bold hover:text-text-primary transition-colors">Cancelar</button>
-                <button className="px-8 py-3 bg-accent-blue text-white rounded-xl font-bold shadow-lg shadow-accent-blue/20 hover:bg-accent-hover transition-all">
+                <button
+                  onClick={handleSave}
+                  className="px-8 py-3 bg-accent-blue text-white rounded-xl font-bold shadow-lg shadow-accent-blue/20 hover:bg-accent-hover transition-all"
+                >
                   Guardar Paciente
                 </button>
               </div>

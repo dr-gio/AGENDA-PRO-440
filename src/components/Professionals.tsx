@@ -31,14 +31,14 @@ const ProfessionalModal = ({
     name: '',
     specialty: '',
     email: '',
-    type: 'interno',
+    type: 'internal',
     google_calendar_id: '',
     status: 'active'
   });
 
   React.useEffect(() => {
     if (initialData) setFormData(initialData);
-    else setFormData({ name: '', specialty: '', email: '', type: 'interno', google_calendar_id: '', status: 'active' });
+    else setFormData({ name: '', specialty: '', email: '', type: 'internal', google_calendar_id: '', status: 'active' });
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -85,8 +85,8 @@ const ProfessionalModal = ({
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                 className="w-full p-4 bg-navy-deep border border-border-subtle rounded-xl text-text-primary focus:border-accent-blue outline-none transition-all appearance-none"
               >
-                <option value="interno">Interno</option>
-                <option value="externo">Externo / Invitado</option>
+                <option value="internal">Interno</option>
+                <option value="external">Externo / Invitado</option>
               </select>
             </div>
           </div>
@@ -200,9 +200,9 @@ export const Professionals = () => {
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     "px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest",
-                    pro.type === 'interno' ? "bg-accent-blue/10 text-accent-blue" : "bg-emerald-500/10 text-emerald-500"
+                    pro.type === 'internal' ? "bg-accent-blue/10 text-accent-blue" : "bg-emerald-500/10 text-emerald-500"
                   )}>
-                    {pro.type}
+                    {pro.type === 'internal' ? 'Interno' : 'Externo'}
                   </span>
                   <button
                     onClick={() => { setEditingProfessional(pro); setModalOpen(true); }}
