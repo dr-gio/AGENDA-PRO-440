@@ -28,6 +28,7 @@ import {
   createGoogleCalendarEvent,
   updateGoogleCalendarEvent,
   cancelGoogleCalendarEvent,
+  listGoogleCalendarEvents,
   CLINIC_CALENDAR_ID,
 } from './googleCalendarService';
 
@@ -255,13 +256,35 @@ export const agentService = {
               functionResult = await dbService.searchResource(call.args.name as string);
               break;
 
-            case 'checkAvailability':
-              functionResult = await dbService.checkAvailability(
-                call.args.professionalId as string,
-                call.args.date as string,
-                call.args.time as string
-              );
+            case 'checkAvailability': {
+              const profId = call.args.professionalId as string;
+              const date = call.args.date as string;
+              const time = call.args.time as string;
+
+              const isLocalAvailable = await dbService.checkAvailability(profId, date, time);
+              if (!isLocalAvailable) {
+                functionResult = false;
+                break;
+              }
+
+              // Also check GCal if configured
+              const professional = await dbService.getDocument('professionals', profId);
+              if (professional.google_calendar_id) {
+                const timeMin = `${date}T${time}:00Z`;
+                const endDateTime = new Date(`${date}T${time}:00Z`);
+                endDateTime.setHours(endDateTime.getHours() + 1);
+                const timeMax = endDateTime.toISOString();
+
+                const gcalEvents = await listGoogleCalendarEvents(professional.google_calendar_id, timeMin, timeMax);
+                if (gcalEvents.length > 0) {
+                  functionResult = false;
+                  break;
+                }
+              }
+
+              functionResult = true;
               break;
+            }
 
             case 'getAppointments': {
               const filters: Record<string, any> = {};

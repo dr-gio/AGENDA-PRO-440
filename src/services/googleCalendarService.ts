@@ -266,6 +266,46 @@ export async function cancelGoogleCalendarEvent(
   }
 }
 
+/**
+ * Lists events from a specific Google Calendar for a given date range.
+ * Used for reading "external" availability from professional/resource calendars.
+ */
+export async function listGoogleCalendarEvents(
+  calendarId: string,
+  timeMin: string, // RFC3339 timestamp
+  timeMax: string, // RFC3339 timestamp
+  oauthToken?: string
+): Promise<any[]> {
+  const token = oauthToken || localStorage.getItem('GOOGLE_OAUTH_TOKEN');
+
+  if (!token) {
+    console.warn('[GCal] No token — cannot list remote events.');
+    return [];
+  }
+
+  try {
+    const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`);
+    url.searchParams.append('timeMin', timeMin);
+    url.searchParams.append('timeMax', timeMax);
+    url.searchParams.append('singleEvents', 'true');
+    url.searchParams.append('orderBy', 'startTime');
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error(`GCal List Error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.items || [];
+  } catch (e) {
+    console.error('[GCal] ❌ List error:', e);
+    return [];
+  }
+}
+
 // ─── Backwards-compatible export (existing code used googleCalendarService.xxx) ───
 
 /** @deprecated Use standalone functions instead */

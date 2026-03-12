@@ -16,7 +16,7 @@ import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay, parseISO } 
 import { es } from 'date-fns/locale';
 import { NewAppointmentModal } from './NewAppointmentModal';
 import { dbService, CreateAppointmentPayload } from '../services/dbService';
-import { createGoogleCalendarEvent, CLINIC_CALENDAR_ID } from '../services/googleCalendarService';
+import { createGoogleCalendarEvent, CLINIC_CALENDAR_ID, listGoogleCalendarEvents } from '../services/googleCalendarService';
 
 export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userId?: string, userRole?: string }) => {
   const isAdmin = userRole === 'admin';
@@ -50,9 +50,36 @@ export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userI
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      // In a real app, we would filter by date range
-      const data = await dbService.getCollection('appointments');
-      setAppointments(data || []);
+
+      // 1. Fetch local appointments from Supabase
+      const localData = await dbService.getCollection('appointments');
+
+      // 2. Fetch active professionals with a calendar ID
+      const profs = await dbService.getCollection('professionals', { status: 'active' });
+      const profsWithCalendar = profs.filter((p: any) => p.google_calendar_id);
+
+      // 3. Define time range for the current week view
+      const timeMin = weekDays[0].toISOString();
+      const timeMax = addDays(weekDays[6], 1).toISOString();
+
+      // 4. Fetch GCal events for each professional (only if token is present)
+      const remoteEventsPromises = profsWithCalendar.map(async (p: any) => {
+        const events = await listGoogleCalendarEvents(p.google_calendar_id, timeMin, timeMax);
+        return events.map(e => ({
+          id: `gcal-${e.id}`,
+          appointment_date: (e.start.dateTime || e.start.date).split('T')[0],
+          start_time: format(new Date(e.start.dateTime || e.start.date), 'HH:mm'),
+          end_time: format(new Date(e.end.dateTime || e.end.date), 'HH:mm'),
+          professional_id: p.id,
+          patient_name: e.summary || 'Bloqueo Externo',
+          status: 'external',
+          is_gcal: true
+        }));
+      });
+
+      const remoteEvents = (await Promise.all(remoteEventsPromises)).flat();
+
+      setAppointments([...(localData || []), ...remoteEvents]);
     } catch (error) {
       console.error('Error fetching appointments:', error);
     } finally {
@@ -254,16 +281,29 @@ export const Agenda = ({ userId = 'anonymous', userRole = 'reception' }: { userI
                       <div
                         key={app.id}
                         style={{ top: `${top}px` }}
-                        className="absolute left-1 right-1 h-20 bg-accent-blue text-white p-3 rounded-xl shadow-lg z-10 border-l-4 border-white group cursor-pointer hover:scale-[1.02] transition-all"
+                        className={cn(
+                          "absolute left-1 right-1 h-20 p-3 rounded-xl shadow-lg z-10 border-l-4 group cursor-pointer hover:scale-[1.02] transition-all",
+                          app.is_gcal
+                            ? "bg-navy-deep border-accent-blue text-text-primary border-l-2 opacity-80"
+                            : "bg-accent-blue text-white border-white"
+                        )}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+                          <p className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest",
+                            app.is_gcal ? "text-accent-blue" : "opacity-80"
+                          )}>
                             {app.start_time}
                           </p>
-                          <MoreHorizontal size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {!app.is_gcal && <MoreHorizontal size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />}
+                          {app.is_gcal && <CalendarIcon size={12} className="text-accent-blue opacity-50" />}
                         </div>
-                        <p className="text-xs font-bold truncate">Paciente ID: {app.patient_id}</p>
-                        <p className="text-[10px] opacity-80 truncate">Cita Médica</p>
+                        <p className="text-xs font-bold truncate">
+                          {app.is_gcal ? app.patient_name : `Id: ${app.patient_id}`}
+                        </p>
+                        <p className="text-[10px] opacity-80 truncate">
+                          {app.is_gcal ? 'Google Calendar' : (app.type_name || 'Cita Médica')}
+                        </p>
                       </div>
                     );
                   })}

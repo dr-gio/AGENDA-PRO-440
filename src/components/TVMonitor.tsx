@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { dbService } from '../services/dbService';
+import { listGoogleCalendarEvents } from '../services/googleCalendarService';
 import { cn } from '../lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -143,32 +144,53 @@ export const TVMonitor = () => {
     const fetchOperationalData = async () => {
         try {
             setLoading(true);
-            const today = format(new Date(), 'yyyy-MM-dd');
+            const todayDate = new Date();
+            const todayStr = format(todayDate, 'yyyy-MM-dd');
 
-            // Fetch all required data
+            // Fetch all required data from Supabase
             const [profs, res, appts] = await Promise.all([
                 dbService.getCollection('professionals', { status: 'active' }),
                 dbService.getCollection('resources', { status: 'active' }),
-                dbService.getCollection('appointments', { appointment_date: today })
+                dbService.getCollection('appointments', { appointment_date: todayStr })
             ]);
 
-            // Fetch patients for names (in a real app, do this via a join or optimized query)
             const patients = await dbService.getCollection('patients');
             const types = await dbService.getCollection('appointment_types');
 
+            // Merge details for local appointments
             const apptWithDetails = appts.map((a: any) => ({
                 ...a,
                 patient_name: patients.find(p => p.id === a.patient_id)?.full_name,
                 type_name: types.find(t => t.id === a.type_id)?.name
             }));
 
-            const currentTimeStr = format(new Date(), 'HH:mm');
+            const currentTimeStr = format(todayDate, 'HH:mm');
+            const timeMin = `${todayStr}T00:00:00Z`;
+            const timeMax = `${todayStr}T23:59:59Z`;
+
+            // Helper to fetch GCal events for a column
+            const getGCalEvents = async (calendarId?: string) => {
+                if (!calendarId) return [];
+                const events = await listGoogleCalendarEvents(calendarId, timeMin, timeMax);
+                return events.map(e => ({
+                    id: e.id,
+                    start_time: format(new Date(e.start.dateTime || e.start.date), 'HH:mm'),
+                    end_time: format(new Date(e.end.dateTime || e.end.date), 'HH:mm'),
+                    patient_name: e.summary,
+                    type_name: 'Bloqueo Google Calendar',
+                    status: 'external'
+                }));
+            };
 
             // Map professionals to columns
-            const profColumns = profs.map((p: any) => {
-                const pAppts = apptWithDetails
+            const profColumns = await Promise.all(profs.map(async (p: any) => {
+                const localAppts = apptWithDetails
                     .filter(a => a.professional_id === p.id)
                     .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+                const gcalAppts = await getGCalEvents(p.google_calendar_id);
+
+                const allAppts = [...localAppts, ...gcalAppts].sort((a, b) => a.start_time.localeCompare(b.start_time));
 
                 return {
                     id: p.id,
@@ -176,16 +198,20 @@ export const TVMonitor = () => {
                     type: 'Especialista',
                     category: 'doctor',
                     icon: Stethoscope,
-                    current: pAppts.find(a => a.start_time <= currentTimeStr && a.end_time >= currentTimeStr && a.status !== 'cancelled'),
-                    upcoming: pAppts.filter(a => a.start_time > currentTimeStr && a.status !== 'cancelled')
+                    current: allAppts.find(a => a.start_time <= currentTimeStr && a.end_time >= currentTimeStr && a.status !== 'cancelled'),
+                    upcoming: allAppts.filter(a => a.start_time > currentTimeStr && a.status !== 'cancelled')
                 };
-            });
+            }));
 
             // Map resources to columns
-            const resColumns = res.map((r: any) => {
-                const rAppts = apptWithDetails
+            const resColumns = await Promise.all(res.map(async (r: any) => {
+                const localAppts = apptWithDetails
                     .filter(a => a.resource_id === r.id)
                     .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+                const gcalAppts = await getGCalEvents(r.google_calendar_id);
+
+                const allAppts = [...localAppts, ...gcalAppts].sort((a, b) => a.start_time.localeCompare(b.start_time));
 
                 const iconMap: any = {
                     'Cámara': Wind,
@@ -200,10 +226,10 @@ export const TVMonitor = () => {
                     type: 'Sala / Recurso',
                     category: 'resource',
                     icon: iconMap[(r.name || '').split(' ')[0]] || Box,
-                    current: rAppts.find(a => a.start_time <= currentTimeStr && a.end_time >= currentTimeStr && a.status !== 'cancelled'),
-                    upcoming: rAppts.filter(a => a.start_time > currentTimeStr && a.status !== 'cancelled')
+                    current: allAppts.find(a => a.start_time <= currentTimeStr && a.end_time >= currentTimeStr && a.status !== 'cancelled'),
+                    upcoming: allAppts.filter(a => a.start_time > currentTimeStr && a.status !== 'cancelled')
                 };
-            });
+            }));
 
             setColumns([...profColumns, ...resColumns] as ColumnData[]);
         } catch (error) {
