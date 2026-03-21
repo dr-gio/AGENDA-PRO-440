@@ -29,7 +29,7 @@ export const Settings = () => {
   const [loading, setLoading] = React.useState(true);
   const [apiKey, setApiKey] = React.useState(localStorage.getItem('GEMINI_API_KEY') || '');
   const [showKey, setShowKey] = React.useState(false);
-  const [gcalClientId, setGcalClientId] = React.useState(localStorage.getItem('GOOGLE_CLIENT_ID') || '453539739290-bvqu4bjanlgnpmffaojees3eut0qrih4.apps.googleusercontent.com');
+  const [gcalClientId, setGcalClientId] = React.useState(localStorage.getItem('GOOGLE_CLIENT_ID') || '952050435020-hp21lmm7rhoresl0kseophjh8svu4bsr.apps.googleusercontent.com');
   const [isGCalConnected, setIsGCalConnected] = React.useState(false);
 
   React.useEffect(() => {
